@@ -1,0 +1,22 @@
+[gd_scene load_steps=4 format=2]
+
+[ext_resource path="res://Mobi/Player.gd" type="Script" id=1]
+[ext_resource path="res://Mobi/Mobi.png" type="Texture" id=2]
+
+[sub_resource type="Animation" id=1]
+resource_name = "TurnLeft"
+
+[node name="Player" type="KinematicBody2D"]
+position = Vector2( 187, 150 )
+script = ExtResource( 1 )
+__meta__ = {
+"_edit_group_": true
+}
+
+[node name="Sprite" type="Sprite" parent="."]
+texture = ExtResource( 2 )
+hframes = 3
+frame = 1
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+anims/TurnLeft = SubResource( 1 )
