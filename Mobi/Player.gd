@@ -18,8 +18,8 @@ func _physics_process(delta):
 		velocity = velocity.move_toward(input_vector * MAX_SPEED, ACCELERATION * delta)
 	else:
 		velocity = Vector2.ZERO
-		
-	velocity = move_and_slide(velocity)
+
+	
 	if velocity.x > 0:
 		sprite.set("frame", 2)
 	elif velocity.x < 0:
