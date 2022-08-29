@@ -6,7 +6,9 @@ const FRICTION = 200
 
 var velocity = Vector2.ZERO
 
-onready var sprite = $Sprite
+func _ready():
+	$AnimatedSprite.connect("animation_finished", self, "_on_AnimatedSprite_animation_finished")
+	$AnimatedSprite.play("default")
 
 func _physics_process(delta):
 	var input_vector = Vector2.ZERO
@@ -19,10 +21,17 @@ func _physics_process(delta):
 	else:
 		velocity = Vector2.ZERO
 
-	
-	if velocity.x > 0:
-		sprite.set("frame", 2)
-	elif velocity.x < 0:
-		sprite.set("frame", 0)
-	else:
-		sprite.set("frame", 1)
+	if $AnimatedSprite.animation != "spin":
+		if velocity.x > 0:
+			$AnimatedSprite.play("turn_right")
+		elif velocity.x < 0:
+			$AnimatedSprite.play("turn_left")
+		else:
+			$AnimatedSprite.play("default")
+
+func spin():
+	$AnimatedSprite.play("spin")
+
+func _on_AnimatedSprite_animation_finished():
+	if $AnimatedSprite.animation == "spin":
+		$AnimatedSprite.play("default")
