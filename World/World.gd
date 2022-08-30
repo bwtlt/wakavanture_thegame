@@ -26,8 +26,11 @@ const X_MAX = 195
 var props = []
 var props_to_spawn = 0
 
+var fuel = 1.0
+
 var rng = RandomNumberGenerator.new()
 var spawn_timer = Timer.new()
+var fuel_timer = Timer.new()
 
 var playing = false
 
@@ -35,7 +38,9 @@ func _start_pressed():
 	playing = true
 	title_screen.visible = false
 	spawn_timer.start()
-	score_label.visible = true
+	fuel_timer.start()
+	
+	fuel = 4
 
 func _ready():
 	rng.randomize()
@@ -46,9 +51,17 @@ func _ready():
 	spawn_timer.set_one_shot(false)
 	spawn_timer.connect("timeout", self, "_add_prop_to_spawn")
 	add_child(spawn_timer)
+	
+	fuel_timer.set_wait_time(5.0)
+	fuel_timer.set_one_shot(false)
+	fuel_timer.connect("timeout", self, "_decrease_fuel")
+	add_child(fuel_timer)
 
 func _add_prop_to_spawn():
 	props_to_spawn += 1
+	
+func _decrease_fuel():
+	fuel -= 1
 
 func _spawn_prop():
 	var prop = Prop.new()
@@ -61,6 +74,7 @@ func _spawn_prop():
 	if BONUS_PROPS.has(prop_type):
 		prop.bonus = true
 
+	prop.type = prop_type
 	prop.add_child(prop_sprite)
 	prop.add_child(prop_collision_shape)
 
@@ -85,15 +99,21 @@ func _remove_out_of_screen_props(delta):
 
 func _handle_collision(collider):
 	if collider.is_in_group("props"):
+		if collider.type == PropType.Jerrycan && fuel < 4:
+			fuel += 1
 		if collider.bonus:
 			score += 1
 		else:
 			score -= 1
+			player.spin()
 		remove_child(collider)
 		score_label.text = "SCORE %s" % score
 
 func _process(delta):
 	if playing:
+		if fuel >= 0:
+			$FuelGauge.frame = fuel
+		
 		background.scroll_offset.y += VELOCITY * delta
 
 		if props_to_spawn > 0 && props_to_spawn < 3:
@@ -110,3 +130,4 @@ func _process(delta):
 
 class Prop extends StaticBody2D:
 	var bonus = false
+	var type = PropType.Jerrycan
