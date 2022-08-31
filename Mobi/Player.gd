@@ -1,8 +1,10 @@
 extends KinematicBody2D
 
 const ACCELERATION = 300
-const MAX_SPEED = 100
+const DEFAULT_MAX_SPEED = 100
 const FRICTION = 200
+
+var max_speed = DEFAULT_MAX_SPEED
 
 var velocity = Vector2.ZERO
 
@@ -17,7 +19,7 @@ func _physics_process(delta):
 	input_vector = input_vector.normalized()
 
 	if input_vector != Vector2.ZERO:
-		velocity = velocity.move_toward(input_vector * MAX_SPEED, ACCELERATION * delta)
+		velocity = velocity.move_toward(input_vector * max_speed, ACCELERATION * delta)
 	else:
 		velocity = Vector2.ZERO
 
@@ -28,6 +30,9 @@ func _physics_process(delta):
 			$AnimatedSprite.play("turn_left")
 		else:
 			$AnimatedSprite.play("default")
+
+func set_max_speed(value):
+	max_speed = value
 
 func spin():
 	$AnimatedSprite.play("spin")
