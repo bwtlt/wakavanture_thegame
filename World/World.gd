@@ -1,11 +1,6 @@
 extends Node2D
 
-onready var title_screen = $TitleScreen
-onready var start_button = $TitleScreen/Menu/Button
-onready var background = $ParallaxBackground
-onready var background_layer = $ParallaxBackground/ParallaxLayer
 onready var player = $Player
-onready var score_label = $Score
 var score = 0
 
 enum PropType {Jerrycan, Banana, PoliceCar}
@@ -15,7 +10,7 @@ const PROPS_TEXTURES = {
 	PropType.PoliceCar: preload("res://Props/PoliceCar.png"),
 	PropType.Banana: preload("res://Props/Banana.png"),
 	}
-	
+
 const BONUS_PROPS = [PropType.Jerrycan]
 const MALUS_PROPS = [PropType.Banana, PropType.PoliceCar]
 
@@ -36,22 +31,30 @@ var playing = false
 
 func _start_pressed():
 	playing = true
-	title_screen.visible = false
+	$TitleScreen.visible = false
+	$GameOverScreen.visible = false
 	spawn_timer.start()
 	fuel_timer.start()
-	
+
+	_set_score(0)
 	fuel = 4
 
 func _ready():
+	$TitleScreen.visible = true
 	rng.randomize()
-	
-	start_button.connect("pressed", self, "_start_pressed")
-	
+
+	var err = $TitleScreen/Menu/Button.connect("pressed", self, "_start_pressed")
+	if err != OK:
+		print ("Failed to connect start button")
+	err = $GameOverScreen/Button.connect("pressed", self, "_start_pressed")
+	if err != OK:
+		print ("Failed to connect restart button")
+
 	spawn_timer.set_wait_time(1.0)
 	spawn_timer.set_one_shot(false)
 	spawn_timer.connect("timeout", self, "_add_prop_to_spawn")
 	add_child(spawn_timer)
-	
+
 	fuel_timer.set_wait_time(5.0)
 	fuel_timer.set_one_shot(false)
 	fuel_timer.connect("timeout", self, "_decrease_fuel")
@@ -59,7 +62,7 @@ func _ready():
 
 func _add_prop_to_spawn():
 	props_to_spawn += 1
-	
+
 func _decrease_fuel():
 	fuel -= 1
 
@@ -86,7 +89,7 @@ func _spawn_prop():
 	prop.add_to_group("props")
 	props.push_back(prop)
 	props_to_spawn -= 1
-	
+
 func _remove_out_of_screen_props(delta):
 	var removed_props = []
 	for i in range(0, props.size()):
@@ -102,31 +105,38 @@ func _handle_collision(collider):
 		if collider.type == PropType.Jerrycan && fuel < 4:
 			fuel += 1
 		if collider.bonus:
-			score += 1
+			_set_score(score + 1)
 		else:
-			score -= 1
+			_set_score(score - 1)
 			player.spin()
 		remove_child(collider)
-		score_label.text = "SCORE %s" % score
+
+func _set_score(new_score):
+	score = new_score
+	$Score.text = "SCORE %s" % score
 
 func _process(delta):
 	if playing:
 		if fuel >= 0:
 			$FuelGauge.frame = fuel
-		
-		background.scroll_offset.y += VELOCITY * delta
+
+		$ParallaxBackground.scroll_offset.y += VELOCITY * delta
 
 		if props_to_spawn > 0 && props_to_spawn < 3:
 			_spawn_prop()
 
 		_remove_out_of_screen_props(delta)
-			
+
 		var collision = player.move_and_collide(player.velocity * delta)
 		if collision:
 			_handle_collision(collision.collider)
-		
+
 		if score >= 10:
 			VELOCITY = 120
+
+		if score < 0 || fuel == 0:
+			playing = false
+			$GameOverScreen.visible = true
 
 class Prop extends StaticBody2D:
 	var bonus = false
